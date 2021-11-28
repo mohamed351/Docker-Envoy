@@ -1,0 +1,47 @@
+version: '3.8'
+services:
+  college_database:
+    container_name: CollegeDatabase
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    env_file:
+      - ./enviroment/databases.env
+    ports:
+      - 9100:1433
+    volumes:
+      - ./CollegeDatabase/:/var/opt/mssql/data
+  hr_database:
+    container_name: HRDatabase
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    env_file:
+      - ./enviroment/databases.env
+    ports:
+      - 9600:1433
+    volumes:
+      - ./HRDatabase/:/var/opt/mssql/data
+  college_service:
+    container_name: college_service
+    build: ./College
+    ports:
+      - 10000:80
+    volumes:
+      - ./College/bin/Debug/net5.0/publish/:/app
+    env_file:
+      - ./enviroment/collegeapp.env
+    depends_on:
+      - college_database
+  hr_service:
+    container_name: hr_service
+    build: ./HR
+    ports:
+      - 11000:80
+    volumes:
+      - ./HR/bin/Debug/net5.0/publish/:/app
+    depends_on:
+      - hr_database
+  envoy_getway:
+    build: ./Envoy
+    ports:
+      - 9901:9901
+      - 10001:10001
+    volumes:
+      - ./Envoy/envoy.yaml:/etc/envoy/envoy.yaml
